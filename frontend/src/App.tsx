@@ -6,7 +6,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  IconButton,
   Typography,
   Box,
   Card,
@@ -30,11 +29,6 @@ function App() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
-  const [updatedPerson, setUpdatedPerson] = useState({
-    name: "",
-    email: "",
-    address: "",
-  });
 
   useEffect(() => {
     fetch(API_URL)
@@ -42,28 +36,6 @@ function App() {
       .then((data) => setPeople(data))
       .catch((error) => console.error("Error fetching people:", error));
   }, []);
-
-  const addPerson = async () => {
-    console.log("clicking add person");
-    if (!name.trim() || !email.trim() || !address.trim()) return;
-    try {
-      console.log("sending request to add person");
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, address }),
-      });
-      if (!response.ok) throw new Error("Failed to add person");
-      const newPerson = await response.json();
-      console.log("newPerson", newPerson);
-      setPeople((prevPeople) => [...prevPeople, newPerson]);
-      setName("");
-      setEmail("");
-      setAddress("");
-    } catch (error) {
-      console.error("Error adding person:", error);
-    }
-  };
 
   const deletePerson = async (id: number) => {
     try {
@@ -106,33 +78,42 @@ function App() {
   };
 
   const startEdit = (person: Person) => {
-    setEditingPerson(person); // Set the person to be edited
-    setUpdatedPerson({
-      name: person.name,
-      email: person.email,
-      address: person.address,
-    });
+    setEditingPerson(person);
+    setName(person.name);
+    setEmail(person.email);
+    setAddress(person.address);
   };
 
-  const updatePerson = async () => {
-    if (!editingPerson) return;
-
-    const response = await fetch(
-      `http://localhost:5001/people/${editingPerson.id}`,
-      {
-        method: "PUT",
+  const addOrUpdatePerson = async () => {
+    if (!name.trim() || !email.trim() || !address.trim()) return;
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedPerson),
-      }
-    );
-
-    if (response.ok) {
-      const updated = await response.json();
-      setPeople((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-      setEditingPerson(null); // Clear the editing state
-      setUpdatedPerson({ name: "", email: "", address: "" }); // Clear the form fields
-    } else {
-      alert("Failed to update person.");
+        body: JSON.stringify({ name, email, address }),
+      });
+      if (!response.ok) throw new Error("Failed to add or update person");
+      const updatedPerson = await response.json();
+      setPeople((prevPeople) => {
+        const existingPersonIndex = prevPeople.findIndex(
+          (p) => p.email === email
+        );
+        if (existingPersonIndex !== -1) {
+          // Update existing person
+          const updatedPeople = [...prevPeople];
+          updatedPeople[existingPersonIndex] = updatedPerson;
+          return updatedPeople;
+        } else {
+          // Add new person
+          return [...prevPeople, updatedPerson];
+        }
+      });
+      setName("");
+      setEmail("");
+      setAddress("");
+      setEditingPerson(null);
+    } catch (error) {
+      console.error("Error adding or updating person:", error);
     }
   };
 
@@ -155,49 +136,46 @@ function App() {
 
         {/* Edit Form (Only Visible When Editing) */}
         <Card sx={{ mb: 2, p: 2 }}>
-          {/* <Typography variant="h6">
-          {editingPerson ? `Editing ${editingPerson.name}` : "Add Contact"}
-        </Typography> */}
           <TextField
             fullWidth
             label="Name"
-            value={updatedPerson.name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setUpdatedPerson({ ...updatedPerson, name: e.target.value });
-            }}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             sx={{ mb: 1 }}
           />
           <TextField
             fullWidth
             label="Email"
-            value={updatedPerson.email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setUpdatedPerson({ ...updatedPerson, email: e.target.value });
-            }}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             sx={{ mb: 1 }}
           />
           <TextField
             fullWidth
             label="Address"
-            value={updatedPerson.address}
-            onChange={(e) => {
-              setAddress(e.target.value);
-              setUpdatedPerson({ ...updatedPerson, address: e.target.value });
-            }}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
             sx={{ mb: 1 }}
           />
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button
               variant="contained"
               color="primary"
-              onClick={editingPerson ? updatePerson : addPerson} // Use updatePerson if editing, else addPerson
+              onClick={addOrUpdatePerson}
+              disabled={!name || !email || !address}
             >
               {editingPerson ? "Update" : "Add"} Contact
             </Button>
             {editingPerson && (
-              <Button variant="outlined" onClick={() => setEditingPerson(null)}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setName("");
+                  setEmail("");
+                  setAddress("");
+                  setEditingPerson(null);
+                }}
+              >
                 Cancel
               </Button>
             )}
@@ -205,24 +183,29 @@ function App() {
         </Card>
 
         {/* People List */}
-        <List>
-          {people.map((person) => (
-            <ListItem key={person.id} sx={{ borderBottom: "1px solid #ddd" }}>
-              <ListItemText
-                primary={person.name}
-                secondary={`${person.email}, ${person.address}`}
-                color="text.secondary"
-              />
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => startEdit(person)}
+        <Box sx={{ maxHeight: 400, overflow: "auto" }}>
+          <List>
+            {people.map((person) => (
+              <ListItem
+                key={person.email}
+                sx={{ borderBottom: "1px solid #ddd" }}
               >
-                Edit
-              </Button>
-            </ListItem>
-          ))}
-        </List>
+                <ListItemText
+                  primary={person.name}
+                  secondary={`${person.email}, ${person.address}`}
+                  color="text.secondary"
+                />
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => startEdit(person)}
+                >
+                  Edit
+                </Button>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       </Container>
     </ThemeProvider>
   );

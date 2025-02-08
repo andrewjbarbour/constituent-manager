@@ -8,9 +8,7 @@ const port = 5001;
 app.use(express.json());
 app.use(cors());
 
-// In-memory storage
 interface Person {
-  id: number;
   name: string;
   email: string;
   address: string;
@@ -19,10 +17,13 @@ interface Person {
 const generateMockData = (num: number) => {
   const mockData = [];
   for (let i = 0; i < num; i++) {
+    const name = faker.person.fullName();
     mockData.push({
-      id: i + 1,
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
+      name,
+      email: faker.internet.email({
+        firstName: name.split(" ")[0],
+        lastName: name.split(" ")[1],
+      }),
       address: `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.state(
         { abbreviated: true }
       )}`,
@@ -32,7 +33,6 @@ const generateMockData = (num: number) => {
 };
 
 let people: Person[] = [];
-let idCounter = 1;
 
 if (people.length === 0) {
   people = generateMockData(20);
@@ -43,7 +43,7 @@ app.get("/people", (req: Request, res: Response): void => {
   res.json(people);
 });
 
-// Add a person
+// Add or update a person
 app.post("/people", (req: Request, res: Response): void => {
   const { name, email, address } = req.body;
   if (!name || !email || !address) {
@@ -51,32 +51,39 @@ app.post("/people", (req: Request, res: Response): void => {
     return;
   }
 
-  const newPerson: Person = { id: idCounter++, name, email, address };
-  people.push(newPerson);
-  res.status(201).json(newPerson);
+  const existingPersonIndex = people.findIndex((p) => p.email === email);
+  if (existingPersonIndex !== -1) {
+    // Update existing person
+    people[existingPersonIndex] = { name, email, address };
+    res.status(200).json(people[existingPersonIndex]);
+  } else {
+    // Add new person
+    const newPerson: Person = { name, email, address };
+    people.push(newPerson);
+    res.status(201).json(newPerson);
+  }
 });
 
-app.put("/people/:id", (req: Request, res: Response): void => {
-  const id = parseInt(req.params.id, 10);
-  const { name, email, address } = req.body;
+app.put("/people/:email", (req: Request, res: Response): void => {
+  const email = req.params.email;
+  const { name, address } = req.body;
 
-  const person = people.find((p) => p.id === id);
+  const person = people.find((p) => p.email === email);
   if (!person) {
     res.status(404).json({ error: "Person not found" });
     return;
   }
 
   if (name) person.name = name;
-  if (email) person.email = email;
   if (address) person.address = address;
 
   res.json(person);
 });
 
 // Delete a person
-app.delete("/people/:id", (req: Request, res: Response): void => {
-  const id = parseInt(req.params.id, 10);
-  const index = people.findIndex((person) => person.id === id);
+app.delete("/people/:email", (req: Request, res: Response): void => {
+  const email = req.params.email;
+  const index = people.findIndex((person) => person.email === email);
   if (index === -1) {
     res.status(404).json({ error: "Person not found" });
     return;
