@@ -17,6 +17,7 @@
 }
 
 .MuiToolbar-gutters,
-.MuiFormControl-root {
+.MuiFormControl-root,
+.MuiDataGrid-selectedRowCount {
   background-color: #fff;
 }
