@@ -72,8 +72,14 @@ app.post("/people", (req: Request, res: Response): void => {
 
   const existingPersonIndex = people.findIndex((p) => p.email === email);
   if (existingPersonIndex !== -1) {
-    // Update existing person
-    people[existingPersonIndex] = { name, email, address, signupTime };
+    // Update existing person but retain the original signupTime
+    const originalSignupTime = people[existingPersonIndex].signupTime;
+    people[existingPersonIndex] = {
+      name,
+      email,
+      address,
+      signupTime: originalSignupTime,
+    };
     res.status(200).json(people[existingPersonIndex]);
   } else {
     // Add new person
