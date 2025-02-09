@@ -21,6 +21,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
+import Papa from "papaparse";
 import minMax from "dayjs/plugin/minMax";
 dayjs.extend(minMax);
 
@@ -86,7 +87,7 @@ function App() {
         person.id,
         person.name,
         person.email,
-        person.address,
+        `"${person.address}"`,
         person.signupTime,
       ]),
     ]
@@ -134,6 +135,65 @@ function App() {
     }
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      Papa.parse(file, {
+        header: true,
+        complete: async (results) => {
+          const newPeople: Person[] = results.data.map((row: any) => ({
+            id: row.ID,
+            name: row.Name,
+            email: row.Email,
+            address: row.Address,
+            signupTime: row["Signup Time"],
+          }));
+
+          const updatedPeople = [...people];
+
+          for (const person of newPeople) {
+            if (
+              !person.name ||
+              !person.email ||
+              !person.address ||
+              !person.signupTime
+            ) {
+              console.error("Missing required fields in CSV data:", person);
+              continue;
+            }
+
+            try {
+              const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(person),
+              });
+              if (!response.ok)
+                throw new Error("Failed to add or update person");
+
+              const updatedPerson = await response.json();
+              const existingPersonIndex = updatedPeople.findIndex(
+                (p) => p.email === person.email
+              );
+              if (existingPersonIndex !== -1) {
+                updatedPeople[existingPersonIndex] = updatedPerson;
+              } else {
+                updatedPeople.push(updatedPerson);
+              }
+            } catch (error) {
+              console.error("Error adding or updating person:", error);
+            }
+          }
+
+          setPeople(updatedPeople);
+        },
+        error: (error) => {
+          console.error("Error parsing CSV file:", error);
+        },
+      });
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Container
@@ -141,7 +201,7 @@ function App() {
       >
         <div className="headerContainer">
           <Typography variant="h4" gutterBottom>
-            Constituents
+            Constituent Manager
           </Typography>
         </div>
         <Card sx={{ mb: 2, p: 2, maxWidth: 400 }}>
@@ -213,7 +273,26 @@ function App() {
               }}
               className="exportButton"
             >
-              Download CSV
+              Download
+            </Button>
+            <Button
+              variant="outlined"
+              component="label"
+              sx={{
+                mb: 2,
+                ml: 5,
+                height: 50,
+                margin: 0,
+              }}
+              className="uploadButton"
+            >
+              Upload
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={handleFileUpload}
+              />
             </Button>
             <DatePicker
               label="Start date"
@@ -233,8 +312,8 @@ function App() {
             />
           </LocalizationProvider>
         </div>
-        <Box sx={{ maxHeight: 400, overflow: "auto" }}>
-          <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+        <Box sx={{ maxHeight: "40vh", overflow: "auto", width: "100%" }}>
+          <TableContainer component={Paper} sx={{ maxHeight: "40vh" }}>
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
