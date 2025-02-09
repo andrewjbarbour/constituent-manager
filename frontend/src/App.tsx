@@ -3,16 +3,23 @@ import {
   Container,
   TextField,
   Button,
-  List,
-  ListItem,
-  ListItemText,
   Typography,
   Box,
   Card,
   ThemeProvider,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 import "./App.css";
 import theme from "./theme";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const API_URL = "http://localhost:5001/people";
 
@@ -37,12 +44,12 @@ function App() {
       .catch((error) => console.error("Error fetching people:", error));
   }, []);
 
-  const deletePerson = async (id: number) => {
+  const deletePerson = async (email: string) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      const response = await fetch(`${API_URL}/${email}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete person");
       setPeople((prevPeople) =>
-        prevPeople.filter((person) => person.id !== id)
+        prevPeople.filter((person) => person.email !== email)
       );
     } catch (error) {
       console.error("Error deleting person:", error);
@@ -64,7 +71,7 @@ function App() {
         person.address,
       ]),
     ]
-      .map((row) => row.join(",")) // Convert to CSV string
+      .map((row) => row.join(","))
       .join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -99,12 +106,10 @@ function App() {
           (p) => p.email === email
         );
         if (existingPersonIndex !== -1) {
-          // Update existing person
           const updatedPeople = [...prevPeople];
           updatedPeople[existingPersonIndex] = updatedPerson;
           return updatedPeople;
         } else {
-          // Add new person
           return [...prevPeople, updatedPerson];
         }
       });
@@ -119,26 +124,18 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container>
+      <Container
+        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      >
         <div className="headerContainer">
           <Typography variant="h4" gutterBottom>
             Constituents
           </Typography>
-          <Button
-            variant="contained"
-            onClick={exportToCSV}
-            sx={{ mb: 2, ml: 5, backgroundColor: "#330072" }}
-            className="exportButton"
-          >
-            Download CSV
-          </Button>
         </div>
-
-        {/* Edit Form (Only Visible When Editing) */}
-        <Card sx={{ mb: 2, p: 2 }}>
+        <Card sx={{ mb: 2, p: 2, maxWidth: 400 }}>
           <TextField
             fullWidth
-            label="Name"
+            label="Full Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             sx={{ mb: 1 }}
@@ -162,7 +159,7 @@ function App() {
               variant="contained"
               color="primary"
               onClick={addOrUpdatePerson}
-              disabled={!name || !email || !address}
+              // disabled={!name || !email || !address}
             >
               {editingPerson ? "Update" : "Add"} Contact
             </Button>
@@ -181,30 +178,74 @@ function App() {
             )}
           </Box>
         </Card>
-
-        {/* People List */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            marginTop: "10px",
+            marginBottom: "20px",
+          }}
+        >
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <Button
+              variant="contained"
+              onClick={exportToCSV}
+              sx={{
+                mb: 2,
+                ml: 5,
+                backgroundColor: "#330072",
+                height: 50,
+                margin: 0,
+              }}
+              className="exportButton"
+            >
+              Download CSV
+            </Button>
+            <DatePicker label="Start date" />
+            <DatePicker label="End date" />
+          </LocalizationProvider>
+        </div>
         <Box sx={{ maxHeight: 400, overflow: "auto" }}>
-          <List>
-            {people.map((person) => (
-              <ListItem
-                key={person.email}
-                sx={{ borderBottom: "1px solid #ddd" }}
-              >
-                <ListItemText
-                  primary={person.name}
-                  secondary={`${person.email}, ${person.address}`}
-                  color="text.secondary"
-                />
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => startEdit(person)}
-                >
-                  Edit
-                </Button>
-              </ListItem>
-            ))}
-          </List>
+          <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Address</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {people.map((person) => (
+                  <TableRow key={person.email}>
+                    <TableCell>{person.name}</TableCell>
+                    <TableCell>{person.email}</TableCell>
+                    <TableCell>{person.address}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => startEdit(person)}
+                        sx={{ mr: 1 }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => deletePerson(person.email)}
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
       </Container>
     </ThemeProvider>
