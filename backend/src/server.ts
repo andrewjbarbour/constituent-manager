@@ -1,12 +1,14 @@
+// filepath: /Users/andrewbarbour/code/indigov-app/backend/src/server.ts
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { connectToDatabase, Person } from "./database";
-import { Op } from "sequelize";
+import { connectToDatabase } from "./database";
+import { PrismaClient } from "@prisma/client";
 import dayjs from "dayjs";
 
 dotenv.config();
 
+const prisma = new PrismaClient();
 export const app = express();
 const port = process.env.PORT || 5001;
 
@@ -18,18 +20,16 @@ connectToDatabase();
 // Get all people with optional date range filtering
 app.get("/people", async (req: Request, res: Response) => {
   const { startDate, endDate } = req.query;
-  let whereClause = {};
+  let whereClause: any = {};
 
   if (startDate || endDate) {
-    whereClause = {
-      signupTime: {
-        ...(startDate && { [Op.gte]: startDate }),
-        ...(endDate && { [Op.lte]: endDate }),
-      },
+    whereClause.signupTime = {
+      ...(startDate && { gte: startDate }),
+      ...(endDate && { lte: endDate }),
     };
   }
 
-  const people = await Person.findAll({ where: whereClause });
+  const people = await prisma.person.findMany({ where: whereClause });
   res.json(people);
 });
 
@@ -42,22 +42,25 @@ app.post("/people", async (req: Request, res: Response) => {
   }
 
   try {
-    let person = await Person.findOne({ where: { email } });
-    if (person) {
-      // Preserve the original signupTime if updating an existing person
-      person.name = name;
-      person.address = address;
-    } else {
-      person = Person.build({
+    const existingPerson = await prisma.person.findUnique({ where: { email } });
+    const person = await prisma.person.upsert({
+      where: { email },
+      update: {
+        name,
+        address,
+        signupTime:
+          existingPerson?.signupTime ||
+          signupTime ||
+          dayjs().format("YYYY-MM-DD"),
+      },
+      create: {
         name,
         email,
         address,
         signupTime: signupTime || dayjs().format("YYYY-MM-DD"),
-      });
-    }
-
-    await person.save();
-    res.status(person.isNewRecord ? 201 : 200).json(person);
+      },
+    });
+    res.status(201).json(person);
   } catch (error) {
     res.status(500).json({ error: "Failed to add or update person" });
   }
@@ -66,15 +69,13 @@ app.post("/people", async (req: Request, res: Response) => {
 // Delete a person
 app.delete("/people/:email", async (req: Request, res: Response) => {
   const email = req.params.email;
-  const person = await Person.findOne({ where: { email } });
 
-  if (!person) {
+  try {
+    const person = await prisma.person.delete({ where: { email } });
+    res.status(204).send();
+  } catch (error) {
     res.status(404).json({ error: "Person not found" });
-    return;
   }
-
-  await person.destroy();
-  res.status(204).send();
 });
 
 app.listen(port, () => {
