@@ -15,7 +15,6 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import "./App.css";
 import theme from "./theme";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -24,17 +23,15 @@ import dayjs, { Dayjs } from "dayjs";
 import Papa from "papaparse";
 import minMax from "dayjs/plugin/minMax";
 import { z } from "zod";
+import { Person } from "./App.types";
+import { exportToCSV } from "./App.utils";
 dayjs.extend(minMax);
 
-const API_URL = "http://localhost:5001/people";
+import "./App.css";
 
-interface Person {
-  id: number;
-  name: string;
-  email: string;
-  address: string;
-  signupTime: string;
-}
+const PORT = process.env.VITE_API_PORT || 5001;
+
+const API_URL = `http://localhost:${PORT}/people`;
 
 function App() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -79,30 +76,6 @@ function App() {
     } catch (error) {
       console.error("Error deleting person:", error);
     }
-  };
-
-  const exportToCSV = () => {
-    const csvContent = [
-      ["ID", "Name", "Email", "Address", "Signup Time"], // CSV Header
-      ...people.map((person) => [
-        person.id,
-        person.name,
-        person.email,
-        `"${person.address}"`,
-        person.signupTime,
-      ]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "people_data.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
   const startEdit = (person: Person) => {
@@ -198,7 +171,13 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Container
-        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "0",
+          maxWidth: "100vw",
+        }}
       >
         <div className="headerContainer">
           <Typography variant="h4" gutterBottom>
@@ -265,7 +244,7 @@ function App() {
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Button
               variant="contained"
-              onClick={exportToCSV}
+              onClick={() => exportToCSV(people)}
               sx={{
                 mb: 2,
                 ml: 5,
@@ -319,20 +298,92 @@ function App() {
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Address</TableCell>
-                  <TableCell>Signup Time</TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 150,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    Name
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 200,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    Email
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 250,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    Address
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      maxWidth: 150,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    Signup Time
+                  </TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {people.map((person) => (
                   <TableRow key={person.email}>
-                    <TableCell>{person.name}</TableCell>
-                    <TableCell>{person.email}</TableCell>
-                    <TableCell>{person.address}</TableCell>
-                    <TableCell>{person.signupTime}</TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: 150,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {person.name}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: 200,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {person.email}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: 250,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {person.address}
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        maxWidth: 150,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {person.signupTime}
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="contained"

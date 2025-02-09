@@ -2,19 +2,16 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { faker } from "@faker-js/faker";
 import dayjs from "dayjs";
+import dotenv from "dotenv";
+import { Person } from "./server.types";
+
+dotenv.config();
 
 export const app = express();
-const port = 5001;
+const port = process.env.PORT || 5001;
 
 app.use(express.json());
 app.use(cors());
-
-interface Person {
-  name: string;
-  email: string;
-  address: string;
-  signupTime: string;
-}
 
 const generateMockData = (num: number) => {
   const mockData = [];
