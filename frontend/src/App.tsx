@@ -23,6 +23,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import Papa from "papaparse";
 import minMax from "dayjs/plugin/minMax";
+import { z } from "zod";
 dayjs.extend(minMax);
 
 const API_URL = "http://localhost:5001/people";
@@ -111,6 +112,13 @@ function App() {
     setAddress(person.address);
   };
 
+  const personSchema = z.object({
+    name: z.string().nonempty("Name is required"),
+    email: z.string().email("Invalid email").nonempty("Email is required"),
+    address: z.string().nonempty("Address is required"),
+    signupTime: z.string().nonempty("Signup Time is required"),
+  });
+
   const addOrUpdatePerson = async () => {
     if (!name.trim() || !email.trim() || !address.trim()) return;
     try {
@@ -152,17 +160,10 @@ function App() {
           const updatedPeople = [...people];
 
           for (const person of newPeople) {
-            if (
-              !person.name ||
-              !person.email ||
-              !person.address ||
-              !person.signupTime
-            ) {
-              console.error("Missing required fields in CSV data:", person);
-              continue;
-            }
-
             try {
+              // Validate the data
+              personSchema.parse(person);
+
               const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -218,6 +219,7 @@ function App() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             sx={{ mb: 1 }}
+            type="email"
           />
           <TextField
             fullWidth
