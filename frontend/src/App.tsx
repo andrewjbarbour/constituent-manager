@@ -13,19 +13,15 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
-import Papa from "papaparse";
 import minMax from "dayjs/plugin/minMax";
-import { z } from "zod";
 import { Person } from "./App.types";
-import { exportToCSV } from "./App.utils";
+import { exportToCSV, handleFileUpload } from "./App.utils";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 dayjs.extend(minMax);
 
+import { API_URL } from "./App.config";
+
 import "./App.css";
-
-const PORT = process.env.VITE_API_PORT || 5001;
-
-const API_URL = `http://localhost:${PORT}/people`;
 
 function App() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -79,13 +75,6 @@ function App() {
     setAddress(person.address);
   };
 
-  const personSchema = z.object({
-    name: z.string().nonempty("Name is required"),
-    email: z.string().email("Invalid email").nonempty("Email is required"),
-    address: z.string().nonempty("Address is required"),
-    signupTime: z.string().nonempty("Signup Time is required"),
-  });
-
   const addOrUpdatePerson = async () => {
     if (!name.trim() || !email.trim() || !address.trim()) return;
     try {
@@ -107,58 +96,6 @@ function App() {
       setEditingPerson(null);
     } catch (error) {
       console.error("Error adding or updating person:", error);
-    }
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      Papa.parse(file, {
-        header: true,
-        complete: async (results) => {
-          const newPeople: Person[] = results.data.map((row: any) => ({
-            id: row.ID,
-            name: row.Name,
-            email: row.Email,
-            address: row.Address,
-            signupTime: row["Signup Time"],
-          }));
-
-          const updatedPeople = [...people];
-
-          for (const person of newPeople) {
-            try {
-              // Validate the data
-              personSchema.parse(person);
-
-              const response = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(person),
-              });
-              if (!response.ok)
-                throw new Error("Failed to add or update person");
-
-              const updatedPerson = await response.json();
-              const existingPersonIndex = updatedPeople.findIndex(
-                (p) => p.email === person.email
-              );
-              if (existingPersonIndex !== -1) {
-                updatedPeople[existingPersonIndex] = updatedPerson;
-              } else {
-                updatedPeople.push(updatedPerson);
-              }
-            } catch (error) {
-              console.error("Error adding or updating person:", error);
-            }
-          }
-
-          setPeople(updatedPeople);
-        },
-        error: (error) => {
-          console.error("Error parsing CSV file:", error);
-        },
-      });
     }
   };
 
@@ -192,11 +129,6 @@ function App() {
       ),
     },
   ];
-
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
 
   return (
     <ThemeProvider theme={theme}>
@@ -301,7 +233,7 @@ function App() {
                 type="file"
                 accept=".csv"
                 hidden
-                onChange={handleFileUpload}
+                onChange={(e) => handleFileUpload(e, people, setPeople)}
               />
             </Button>
             <DatePicker
