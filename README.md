@@ -11,6 +11,12 @@ Before you begin, ensure you have the following installed on your machine:
 
 ## Getting Started
 
+Clone the project:
+
+```sh
+https://github.com/andrewjbarbour/constituent-manager.git
+```
+
 ### Backend
 
 Navigate to the backend directory, install the dependencies, and start the server:

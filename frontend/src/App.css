@@ -1,10 +1,10 @@
 #root {
-  /* max-width: 1280px; */
   margin: 0 auto;
   width: 100vw;
   padding: 2rem;
   text-align: center;
   background-color: #fff9f4;
+  color: #213547;
 }
 
 .headerContainer {
@@ -14,4 +14,9 @@
 
 .exportButton {
   margin-left: 20px;
+}
+
+.MuiToolbar-gutters,
+.MuiFormControl-root {
+  background-color: #fff;
 }
