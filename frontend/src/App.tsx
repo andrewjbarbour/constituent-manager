@@ -1,27 +1,20 @@
 import { useEffect, useState } from "react";
-import {
-  Container,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Card,
-  ThemeProvider,
-} from "@mui/material";
-import theme from "./theme";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { Container, ThemeProvider } from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import minMax from "dayjs/plugin/minMax";
+
 import { Person } from "./App.types";
 import { exportToCSV, handleFileUpload } from "./App.utils";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-dayjs.extend(minMax);
-
 import { API_URL } from "./App.config";
+import theme from "./theme";
+import Header from "./components/Header";
+import ContactForm from "./components/ContactForm";
+import ListToolbar from "./components/ListToolbar";
+import ConstituentList from "./components/ConstituentList";
 
 import "./App.css";
+
+dayjs.extend(minMax);
 
 function App() {
   const [people, setPeople] = useState<Person[]>([]);
@@ -31,6 +24,10 @@ function App() {
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
+
+  useEffect(() => {
+    fetchPeople();
+  }, []);
 
   const fetchPeople = (startDate?: Dayjs, endDate?: Dayjs) => {
     let url = API_URL;
@@ -53,10 +50,6 @@ function App() {
       })
       .catch((error) => console.error("Error fetching people:", error));
   };
-
-  useEffect(() => {
-    fetchPeople();
-  }, []);
 
   const deletePerson = async (email: string) => {
     try {
@@ -99,36 +92,12 @@ function App() {
     }
   };
 
-  const columns: GridColDef[] = [
-    { field: "name", headerName: "Name", flex: 1 },
-    { field: "email", headerName: "Email", width: 300 },
-    { field: "address", headerName: "Address", width: 300 },
-    { field: "signupTime", headerName: "Signup Time", width: 150 },
-    {
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
-      renderCell: (params) => (
-        <>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => startEdit(params.row)}
-            sx={{ mr: 1 }}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={() => deletePerson(params.row.email)}
-          >
-            Delete
-          </Button>
-        </>
-      ),
-    },
-  ];
+  const cancelUpdate = () => {
+    setName("");
+    setEmail("");
+    setAddress("");
+    setEditingPerson(null);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -141,127 +110,34 @@ function App() {
           maxWidth: "100vw",
         }}
       >
-        <div className="headerContainer">
-          <Typography variant="h4" gutterBottom>
-            Constituent Manager
-          </Typography>
-        </div>
-        <Card sx={{ mb: 2, p: 2, maxWidth: 400 }}>
-          <TextField
-            fullWidth
-            label="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            sx={{ mb: 1 }}
-          />
-          <TextField
-            fullWidth
-            label="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            sx={{ mb: 1 }}
-            type="email"
-          />
-          <TextField
-            fullWidth
-            label="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            sx={{ mb: 1 }}
-          />
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={addOrUpdatePerson}
-            >
-              {editingPerson ? "Update" : "Add"} Contact
-            </Button>
-            {editingPerson && (
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setName("");
-                  setEmail("");
-                  setAddress("");
-                  setEditingPerson(null);
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-          </Box>
-        </Card>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            marginTop: "10px",
-            marginBottom: "20px",
-          }}
-        >
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Button
-              variant="contained"
-              onClick={() => exportToCSV(people)}
-              sx={{
-                mb: 2,
-                ml: 5,
-                backgroundColor: "#330072",
-                height: 50,
-                margin: 0,
-              }}
-              className="exportButton"
-            >
-              Download
-            </Button>
-            <Button
-              variant="outlined"
-              component="label"
-              sx={{
-                mb: 2,
-                ml: 5,
-                height: 50,
-                margin: 0,
-              }}
-              className="uploadButton"
-            >
-              Upload
-              <input
-                type="file"
-                accept=".csv"
-                hidden
-                onChange={(e) => handleFileUpload(e, people, setPeople)}
-              />
-            </Button>
-            <DatePicker
-              label="Signup start date"
-              value={startDate}
-              onChange={(newValue) => {
-                setStartDate(newValue);
-                fetchPeople(newValue ?? undefined, endDate ?? undefined);
-              }}
-            />
-            <DatePicker
-              label="Signup end date"
-              value={endDate}
-              onChange={(newValue) => {
-                setEndDate(newValue);
-                fetchPeople(startDate ?? undefined, newValue ?? undefined);
-              }}
-            />
-          </LocalizationProvider>
-        </div>
-        <Box sx={{ height: "45vh", width: "100%" }}>
-          <DataGrid
-            rows={people}
-            columns={columns}
-            getRowId={(row) => row.email}
-            rowCount={people.length}
-          />
-        </Box>
+        <Header />
+        <ContactForm
+          name={name}
+          setName={setName}
+          email={email}
+          setEmail={setEmail}
+          address={address}
+          setAddress={setAddress}
+          addOrUpdatePerson={addOrUpdatePerson}
+          cancelUpdate={cancelUpdate}
+          editingPerson={editingPerson}
+        />
+        <ListToolbar
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          fetchPeople={fetchPeople}
+          exportToCSV={exportToCSV}
+          people={people}
+          setPeople={setPeople}
+          handleFileUpload={handleFileUpload}
+        />
+        <ConstituentList
+          people={people}
+          startEdit={startEdit}
+          deletePerson={deletePerson}
+        />
       </Container>
     </ThemeProvider>
   );
