@@ -1,4 +1,4 @@
-# Indigov App
+# Constituent Manager
 
 This repository contains the source code for the Constituent Manager App, which includes both frontend and backend components. The frontend is built with React, TypesScript and Material UI, while the backend is built with Node and Express.js.
 
