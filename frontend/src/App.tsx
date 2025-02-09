@@ -7,13 +7,6 @@ import {
   Box,
   Card,
   ThemeProvider,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
 } from "@mui/material";
 import theme from "./theme";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -25,6 +18,7 @@ import minMax from "dayjs/plugin/minMax";
 import { z } from "zod";
 import { Person } from "./App.types";
 import { exportToCSV } from "./App.utils";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 dayjs.extend(minMax);
 
 import "./App.css";
@@ -168,6 +162,42 @@ function App() {
     }
   };
 
+  const columns: GridColDef[] = [
+    { field: "name", headerName: "Name", flex: 1 },
+    { field: "email", headerName: "Email", width: 300 },
+    { field: "address", headerName: "Address", width: 300 },
+    { field: "signupTime", headerName: "Signup Time", width: 150 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      flex: 1,
+      renderCell: (params) => (
+        <>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => startEdit(params.row)}
+            sx={{ mr: 1 }}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => deletePerson(params.row.email)}
+          >
+            Delete
+          </Button>
+        </>
+      ),
+    },
+  ];
+
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
   return (
     <ThemeProvider theme={theme}>
       <Container
@@ -212,7 +242,6 @@ function App() {
               variant="contained"
               color="primary"
               onClick={addOrUpdatePerson}
-              // disabled={!name || !email || !address}
             >
               {editingPerson ? "Update" : "Add"} Contact
             </Button>
@@ -276,7 +305,7 @@ function App() {
               />
             </Button>
             <DatePicker
-              label="Start date"
+              label="Signup start date"
               value={startDate}
               onChange={(newValue) => {
                 setStartDate(newValue);
@@ -284,7 +313,7 @@ function App() {
               }}
             />
             <DatePicker
-              label="End date"
+              label="Signup end date"
               value={endDate}
               onChange={(newValue) => {
                 setEndDate(newValue);
@@ -293,119 +322,13 @@ function App() {
             />
           </LocalizationProvider>
         </div>
-        <Box sx={{ maxHeight: "40vh", overflow: "auto", width: "100%" }}>
-          <TableContainer component={Paper} sx={{ maxHeight: "40vh" }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      maxWidth: 150,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Name
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      maxWidth: 200,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Email
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      maxWidth: 250,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Address
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      maxWidth: 150,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    Signup Time
-                  </TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {people.map((person) => (
-                  <TableRow key={person.email}>
-                    <TableCell
-                      sx={{
-                        maxWidth: 150,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {person.name}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        maxWidth: 200,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {person.email}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        maxWidth: 250,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {person.address}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        maxWidth: 150,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {person.signupTime}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => startEdit(person)}
-                        sx={{ mr: 1 }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={() => deletePerson(person.email)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+        <Box sx={{ height: "45vh", width: "100%" }}>
+          <DataGrid
+            rows={people}
+            columns={columns}
+            getRowId={(row) => row.email}
+            rowCount={people.length}
+          />
         </Box>
       </Container>
     </ThemeProvider>

@@ -35,7 +35,7 @@ const generateMockData = (num: number) => {
   return mockData;
 };
 
-let people: Person[] = generateMockData(20);
+let people: Person[] = generateMockData(500);
 
 // Get all people with optional date range filtering
 app.get("/people", (req: Request, res: Response): void => {
