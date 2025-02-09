@@ -79,28 +79,10 @@ app.post("/people", (req: Request, res: Response): void => {
     };
     res.status(200).json(people[existingPersonIndex]);
   } else {
-    // Add new person
     const newPerson: Person = { name, email, address, signupTime };
     people.push(newPerson);
     res.status(201).json(newPerson);
   }
-});
-
-app.put("/people/:email", (req: Request, res: Response): void => {
-  const email = req.params.email;
-  const { name, address, signupTime } = req.body;
-
-  const person = people.find((p) => p.email === email);
-  if (!person) {
-    res.status(404).json({ error: "Person not found" });
-    return;
-  }
-
-  if (name) person.name = name;
-  if (address) person.address = address;
-  if (signupTime) person.signupTime = signupTime;
-
-  res.json(person);
 });
 
 // Delete a person

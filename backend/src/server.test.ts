@@ -65,41 +65,6 @@ describe("POST /people", () => {
   });
 });
 
-describe("PUT /people/:email", () => {
-  it("should update the details of an existing person", async () => {
-    const existingPerson = {
-      name: "John Smith",
-      email: "john.smith@example.com",
-      address: "123 Main St, Anytown, USA",
-      signupTime: "2025-02-09",
-    };
-    await request(app).post("/people").send(existingPerson);
-
-    const updatedPerson = {
-      name: "John Doe",
-      address: "456 Elm St, Anytown, USA",
-      signupTime: "2025-02-10",
-    };
-    const response = await request(app)
-      .put(`/people/${existingPerson.email}`)
-      .send(updatedPerson);
-    expect(response.status).toBe(200);
-    expect(response.body.name).toBe("John Doe");
-  });
-
-  it("should return an error if the person is not found", async () => {
-    const response = await request(app)
-      .put("/people/nonexistent@example.com")
-      .send({
-        name: "Nonexistent Person",
-        address: "123 Main St, Anytown, USA",
-        signupTime: "2025-02-09",
-      });
-    expect(response.status).toBe(404);
-    expect(response.body.error).toBe("Person not found");
-  });
-});
-
 describe("DELETE /people/:email", () => {
   it("should delete an existing person", async () => {
     const existingPerson = {

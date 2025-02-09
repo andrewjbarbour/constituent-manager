@@ -6,8 +6,8 @@ This repository contains the source code for the Constituent Manager App, which 
 
 Before you begin, ensure you have the following installed on your machine:
 
-- Node.js (v14 or higher)
-- npm (v6 or higher)
+- Node.js (18.0 or higher)
+- npm (10.4.0 or higher)
 
 ## Getting Started
 
@@ -62,7 +62,5 @@ The backend server provides the following API endpoints:
 `GET /people`: Retrieve a list of people with optional date range filtering.
 
 `POST /people`: Add or update a person.
-
-`PUT /people/:email`: Update a person by email.
 
 `DELETE /people/:email`: Delete a person by email.
