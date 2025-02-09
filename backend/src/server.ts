@@ -3,7 +3,7 @@ import cors from "cors";
 import { faker } from "@faker-js/faker";
 import dayjs from "dayjs";
 
-const app = express();
+export const app = express();
 const port = 5001;
 
 app.use(express.json());
