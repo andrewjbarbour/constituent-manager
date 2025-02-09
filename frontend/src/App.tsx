@@ -20,6 +20,9 @@ import theme from "./theme";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import minMax from "dayjs/plugin/minMax";
+dayjs.extend(minMax);
 
 const API_URL = "http://localhost:5001/people";
 
@@ -28,6 +31,7 @@ interface Person {
   name: string;
   email: string;
   address: string;
+  signupTime: string;
 }
 
 function App() {
@@ -36,39 +40,54 @@ function App() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [startDate, setStartDate] = useState<Dayjs | null>(null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(null);
+
+  const fetchPeople = (startDate?: Dayjs, endDate?: Dayjs) => {
+    let url = API_URL;
+    if (startDate || endDate) {
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate.format("YYYY-MM-DD"));
+      if (endDate) params.append("endDate", endDate.format("YYYY-MM-DD"));
+      url += `?${params.toString()}`;
+    }
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        setPeople(data);
+        if (data.length > 0) {
+          const dates = data.map((person: Person) => dayjs(person.signupTime));
+          setStartDate(dayjs.min(dates));
+          setEndDate(dayjs.max(dates));
+        }
+      })
+      .catch((error) => console.error("Error fetching people:", error));
+  };
 
   useEffect(() => {
-    fetch(API_URL)
-      .then((res) => res.json())
-      .then((data) => setPeople(data))
-      .catch((error) => console.error("Error fetching people:", error));
+    fetchPeople();
   }, []);
 
   const deletePerson = async (email: string) => {
     try {
       const response = await fetch(`${API_URL}/${email}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete person");
-      setPeople((prevPeople) =>
-        prevPeople.filter((person) => person.email !== email)
-      );
+      fetchPeople(startDate ?? undefined, endDate ?? undefined);
     } catch (error) {
       console.error("Error deleting person:", error);
     }
   };
 
   const exportToCSV = () => {
-    if (people.length === 0) {
-      alert("No data to export!");
-      return;
-    }
-
     const csvContent = [
-      ["ID", "Name", "Email", "Address"], // CSV Header
+      ["ID", "Name", "Email", "Address", "Signup Time"], // CSV Header
       ...people.map((person) => [
         person.id,
         person.name,
         person.email,
         person.address,
+        person.signupTime,
       ]),
     ]
       .map((row) => row.join(","))
@@ -97,22 +116,15 @@ function App() {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, address }),
+        body: JSON.stringify({
+          name,
+          email,
+          address,
+          signupTime: dayjs().format("YYYY-MM-DD"),
+        }),
       });
       if (!response.ok) throw new Error("Failed to add or update person");
-      const updatedPerson = await response.json();
-      setPeople((prevPeople) => {
-        const existingPersonIndex = prevPeople.findIndex(
-          (p) => p.email === email
-        );
-        if (existingPersonIndex !== -1) {
-          const updatedPeople = [...prevPeople];
-          updatedPeople[existingPersonIndex] = updatedPerson;
-          return updatedPeople;
-        } else {
-          return [...prevPeople, updatedPerson];
-        }
-      });
+      fetchPeople(startDate ?? undefined, endDate ?? undefined);
       setName("");
       setEmail("");
       setAddress("");
@@ -203,8 +215,22 @@ function App() {
             >
               Download CSV
             </Button>
-            <DatePicker label="Start date" />
-            <DatePicker label="End date" />
+            <DatePicker
+              label="Start date"
+              value={startDate}
+              onChange={(newValue) => {
+                setStartDate(newValue);
+                fetchPeople(newValue ?? undefined, endDate ?? undefined);
+              }}
+            />
+            <DatePicker
+              label="End date"
+              value={endDate}
+              onChange={(newValue) => {
+                setEndDate(newValue);
+                fetchPeople(startDate ?? undefined, newValue ?? undefined);
+              }}
+            />
           </LocalizationProvider>
         </div>
         <Box sx={{ maxHeight: 400, overflow: "auto" }}>
@@ -215,6 +241,7 @@ function App() {
                   <TableCell>Name</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>Address</TableCell>
+                  <TableCell>Signup Time</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -224,6 +251,7 @@ function App() {
                     <TableCell>{person.name}</TableCell>
                     <TableCell>{person.email}</TableCell>
                     <TableCell>{person.address}</TableCell>
+                    <TableCell>{person.signupTime}</TableCell>
                     <TableCell>
                       <Button
                         variant="contained"
