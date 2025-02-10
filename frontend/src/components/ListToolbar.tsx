@@ -32,7 +32,6 @@ function ListToolbar({
   handleFileUpload,
 }: ListToolbarProps) {
   const maxDate = dayjs().endOf("day");
-  const minDate = maxDate.subtract(4, "day");
 
   return (
     <div
@@ -86,7 +85,6 @@ function ListToolbar({
             setStartDate(newValue);
             fetchPeople(newValue ?? undefined, endDate ?? undefined);
           }}
-          minDate={minDate}
           maxDate={maxDate}
         />
         <DatePicker
@@ -96,7 +94,6 @@ function ListToolbar({
             setEndDate(newValue);
             fetchPeople(startDate ?? undefined, newValue ?? undefined);
           }}
-          minDate={minDate}
           maxDate={maxDate}
         />
       </LocalizationProvider>
