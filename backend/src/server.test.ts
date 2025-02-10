@@ -1,9 +1,28 @@
 import request from "supertest";
 import { app } from "./server";
-import { it, describe, expect } from "@jest/globals";
+import { it, describe, expect, afterAll, beforeAll } from "@jest/globals";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+beforeAll(async () => {
+  await prisma.$connect();
+  await prisma.person.deleteMany(); // Clear existing data
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
 
 describe("GET /people", () => {
   it("should return all people", async () => {
+    const newPerson = {
+      name: "John Doe",
+      email: "john.doe@example.com",
+      address: "123 Main St, Anytown, USA",
+      signupTime: "2025-02-09",
+    };
+    await request(app).post("/people").send(newPerson);
     const response = await request(app).get("/people");
     expect(response.status).toBe(200);
     expect(response.body.length).toBeGreaterThan(0);
@@ -21,8 +40,8 @@ describe("GET /people", () => {
 describe("POST /people", () => {
   it("should add a new person", async () => {
     const newPerson = {
-      name: "John Doe",
-      email: "john.doe@example.com",
+      name: "Jane Doe",
+      email: "jane.doe@example.com",
       address: "123 Main St, Anytown, USA",
       signupTime: "2025-02-09",
     };
@@ -33,17 +52,16 @@ describe("POST /people", () => {
 
   it("should return an error if any required field is missing", async () => {
     const newPerson = {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      address: "123 Main St, Anytown, USA",
+      name: "Mary Billings",
+      email: "mary.billings@example.com",
     };
     const response = await request(app).post("/people").send(newPerson);
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe(
-      "Name, email, address, and signupTime are required"
-    );
+    expect(response.body.error).toBe("Name, email, and address are required");
   });
+});
 
+describe("PUT /people/:email", () => {
   it("should update an existing person if the email already exists", async () => {
     const existingPerson = {
       name: "Jane Doe",
@@ -55,13 +73,36 @@ describe("POST /people", () => {
 
     const updatedPerson = {
       name: "Jane Smith",
-      email: "jane.doe@example.com",
       address: "789 Oak St, Anytown, USA",
-      signupTime: "2025-02-08",
+      newEmail: "jane.doe@example.com",
     };
-    const response = await request(app).post("/people").send(updatedPerson);
+    const response = await request(app)
+      .put(`/people/${existingPerson.email}`)
+      .send(updatedPerson);
     expect(response.status).toBe(200);
     expect(response.body.name).toBe("Jane Smith");
+  });
+
+  it("should return an error if any required field is missing", async () => {
+    const existingPerson = {
+      name: "Jane Doe",
+      email: "jane.doe@example.com",
+      address: "456 Elm St, Anytown, USA",
+      signupTime: "2025-02-08",
+    };
+    await request(app).post("/people").send(existingPerson);
+
+    const updatedPerson = {
+      name: "Jane Smith",
+      address: "789 Oak St, Anytown, USA",
+    };
+    const response = await request(app)
+      .put(`/people/${existingPerson.email}`)
+      .send(updatedPerson);
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe(
+      "Name, email, newEmail, and address are required"
+    );
   });
 });
 
