@@ -19,11 +19,11 @@ https://github.com/andrewjbarbour/constituent-manager.git
 
 ### Backend Setup
 
-Navigate to the backend directory, run `npm setup` (which will install the dependencies and setup the SQLite database with Prisma), and start the server:
+Navigate to the backend directory, run `npm run setup` (which will install the dependencies and setup the SQLite database with Prisma), and start the server:
 
 ```sh
 cd backend
-npm setup
+npm run setup
 npm run dev
 ```
 
