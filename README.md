@@ -1,6 +1,6 @@
 # Constituent Manager
 
-This repository contains the source code for the Constituent Manager App, an app for managing constituents. The frontend is built with React, TypesScript and Material UI, while the backend is built with Node, Express.js, SQLite, and Prisma.
+This repository contains the source code for the Constituent Manager App, an app for managing constituent contact details with both frontend and backend components. The frontend is built with React, TypesScript and Material UI, while the backend is built with Node, Express.js, SQLite, and Prisma.
 
 ## Prerequisites
 
