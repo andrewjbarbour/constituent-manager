@@ -47,7 +47,7 @@ The frontend development server will start on http://localhost:5173.
 
 By default, the SQLite database is initially seeded with 500 mock constituents. You can configure how many constituents are seeded with `generateMockData` in `database.ts`.
 
-### Testing
+## Testing
 
 To run the tests, navigate to the backend directory and use the following command:
 
@@ -57,11 +57,11 @@ npm run test
 
 This command will set up the test environment, apply the necessary Prisma migrations to the test database, and run the tests using Jest.
 
-### Usage
+## Usage
 
 Once both the frontend and backend servers are running, you can access the application by navigating to http://localhost:5173 in your web browser.
 
-### Features
+## Features
 
 - View, sort, and filter a list of constituents with their details.
 - Add a new constituent.
@@ -71,7 +71,7 @@ Once both the frontend and backend servers are running, you can access the appli
 - Export the list of constituents to a CSV file filtered by signup range.
 - Import a list of constituents from a CSV file.
 
-### API Endpoints
+## API Endpoints
 
 The backend server provides the following API endpoints:
 
