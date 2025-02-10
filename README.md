@@ -33,11 +33,12 @@ You can set a custom port for the back-end server by updating the .env files in 
 
 ### Frontend
 
-Open a new terminal and navigate to the frontend directory. Install the dependencies and start the server:
+Open a new terminal and navigate to the frontend directory. Install the dependencies, set up the sqlite database with Prisma, and start the server:
 
 ```sh
 cd backend
 npm install
+npx prisma migrate dev --name init
 npm run dev
 ```
 
