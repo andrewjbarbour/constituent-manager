@@ -1,7 +1,7 @@
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Button } from "@mui/material";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { Person } from "../App.types";
 
 interface ListToolbarProps {
@@ -31,6 +31,9 @@ function ListToolbar({
   setPeople,
   handleFileUpload,
 }: ListToolbarProps) {
+  const maxDate = dayjs().endOf("day");
+  const minDate = maxDate.subtract(4, "day");
+
   return (
     <div
       style={{
@@ -83,6 +86,8 @@ function ListToolbar({
             setStartDate(newValue);
             fetchPeople(newValue ?? undefined, endDate ?? undefined);
           }}
+          minDate={minDate}
+          maxDate={maxDate}
         />
         <DatePicker
           label="Signup end date"
@@ -91,6 +96,8 @@ function ListToolbar({
             setEndDate(newValue);
             fetchPeople(startDate ?? undefined, newValue ?? undefined);
           }}
+          minDate={minDate}
+          maxDate={maxDate}
         />
       </LocalizationProvider>
     </div>
