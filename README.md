@@ -1,6 +1,6 @@
 # Constituent Manager
 
-This repository contains the source code for the Constituent Manager App, which includes both frontend and backend components. The frontend is built with React, TypesScript and Material UI, while the backend is built with Node and Express.js.
+This repository contains the source code for the Constituent Manager App, which includes both frontend and backend components. The frontend is built with React, TypesScript and Material UI, while the backend is built with Node, Express.js, SQLite, and Prisma.
 
 ## Prerequisites
 
@@ -45,7 +45,7 @@ The frontend development server will start on http://localhost:5173.
 
 ### Seeding the database
 
-By default, 500 mock constituents are generated whenever the server starts with Faker.js. You can configure how many constituents are seeded with `generateMockData` in `server.ts`.
+By default, the SQLite database is initially seeded with 500 mock constituents. You can configure how many constituents are seeded with `generateMockData` in `database.ts`.
 
 ### Usage
 

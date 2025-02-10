@@ -16,28 +16,36 @@ export const connectToDatabase = async () => {
 
 const seedDatabase = async () => {
   const generateMockData = (num: number) => {
+    const emails = new Set();
     const mockData = [];
-    for (let i = 0; i < num; i++) {
+
+    while (mockData.length < num) {
       const name = faker.person.fullName();
       const signupTime = dayjs()
         .subtract(faker.number.int({ min: 0, max: 3 }), "day")
         .format("YYYY-MM-DD");
-      mockData.push({
-        name,
-        email: faker.internet.email({
-          firstName: name.split(" ")[0],
-          lastName: name.split(" ")[1],
-        }),
-        address: `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.state(
-          { abbreviated: true }
-        )}`,
-        signupTime,
+      const email = faker.internet.email({
+        firstName: name.split(" ")[0],
+        lastName: name.split(" ")[1],
       });
+
+      // Ensure the email is unique
+      if (!emails.has(email)) {
+        emails.add(email);
+        const address = `${faker.location.streetAddress()}, ${faker.location.city()}, ${faker.location.state(
+          { abbreviated: true }
+        )}`;
+        mockData.push({ name, email, address, signupTime });
+      }
     }
+
     return mockData;
   };
 
-  const people = generateMockData(500);
-  await prisma.person.createMany({ data: people });
-  console.log("Database has been seeded.");
+  const count = await prisma.person.count();
+  if (count === 0) {
+    const people = generateMockData(500);
+    await prisma.person.createMany({ data: people });
+    console.log("Database has been seeded.");
+  }
 };
