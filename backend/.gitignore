@@ -25,4 +25,4 @@ dist-ssr
 
 
 # Ignore SQLite database file
-backend/prisma/dev.db
+prisma/dev.db
