@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "setup": "npm install && npx prisma migrate dev --name init",
     "dev": "cross-env NODE_ENV=development DATABASE_URL=file:./dev.db prisma migrate dev --name init && nodemon src/server.ts",
     "test": "cross-env NODE_ENV=test DATABASE_URL=file:./test.db prisma migrate deploy && jest"
   },

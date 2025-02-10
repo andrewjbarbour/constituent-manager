@@ -19,12 +19,11 @@ https://github.com/andrewjbarbour/constituent-manager.git
 
 ### Backend Setup
 
-Navigate to the backend directory, install the dependencies, set up the sqlite database with Prisma, and start the server:
+Navigate to the backend directory, run `npm setup` (which will install the dependencies and setup the SQLite database with Prisma), and start the server:
 
 ```sh
 cd backend
-npm install
-npx prisma migrate dev --name init
+npm setup
 npm run dev
 ```
 
@@ -47,6 +46,16 @@ The frontend development server will start on http://localhost:5173.
 ### Seeding the database
 
 By default, the SQLite database is initially seeded with 500 mock constituents. You can configure how many constituents are seeded with `generateMockData` in `database.ts`.
+
+### Testing
+
+To run the tests, navigate to the backend directory and use the following command:
+
+```sh
+npm run test
+```
+
+This command will set up the test environment, apply the necessary Prisma migrations to the test database, and run the tests using Jest.
 
 ### Usage
 
