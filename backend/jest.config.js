@@ -8,4 +8,11 @@ module.exports = {
   coverageDirectory: "coverage",
   collectCoverage: true,
   preset: "ts-jest",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  globalSetup: "<rootDir>/jest.globalSetup.js",
+  globals: {
+    "ts-jest": {
+      diagnostics: false,
+    },
+  },
 };

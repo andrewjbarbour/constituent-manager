@@ -3,7 +3,11 @@ import { app } from "./server";
 import { it, describe, expect, afterAll, beforeAll } from "@jest/globals";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: { url: process.env.DATABASE_URL_TEST },
+  },
+});
 
 beforeAll(async () => {
   await prisma.$connect();
@@ -11,6 +15,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await prisma.person.deleteMany();
   await prisma.$disconnect();
 });
 
@@ -40,8 +45,8 @@ describe("GET /people", () => {
 describe("POST /people", () => {
   it("should add a new person", async () => {
     const newPerson = {
-      name: "Jane Doe",
-      email: "jane.doe@example.com",
+      name: "John Deer",
+      email: "john.deer@example.com",
       address: "123 Main St, Anytown, USA",
       signupTime: "2025-02-09",
     };
@@ -109,10 +114,10 @@ describe("PUT /people/:email", () => {
 describe("DELETE /people/:email", () => {
   it("should delete an existing person", async () => {
     const existingPerson = {
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      address: "123 Main St, Anytown, USA",
-      signupTime: "2025-02-09",
+      name: "Jane Doe",
+      email: "jane.doe@example.com",
+      address: "456 Elm St, Anytown, USA",
+      signupTime: "2025-02-08",
     };
     await request(app).post("/people").send(existingPerson);
 

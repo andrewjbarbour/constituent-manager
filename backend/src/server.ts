@@ -1,13 +1,14 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { connectToDatabase } from "./database";
 import { PrismaClient } from "@prisma/client";
 import dayjs from "dayjs";
+import { connectToDatabase } from "./database";
+
+const prisma = new PrismaClient();
 
 dotenv.config();
 
-const prisma = new PrismaClient();
 export const app = express();
 const port = process.env.PORT || 5001;
 
@@ -51,6 +52,7 @@ app.post("/people", async (req: Request, res: Response) => {
     });
     res.status(201).json(person);
   } catch (error) {
+    console.error("Error adding person:", error);
     res.status(500).json({ error: "Failed to add person" });
   }
 });
@@ -75,9 +77,10 @@ app.put("/people/:email", async (req: Request, res: Response) => {
     }
 
     if (email !== newEmail) {
-      // If a person changes their email, delete the old entry and create a new one
+      // Delete the person with the previous email
       await prisma.person.delete({ where: { email } });
 
+      // Create a new person with the new email
       const person = await prisma.person.create({
         data: {
           name,
@@ -88,6 +91,7 @@ app.put("/people/:email", async (req: Request, res: Response) => {
       });
       res.status(200).json(person);
     } else {
+      // Update the existing person
       const person = await prisma.person.update({
         where: { email },
         data: {
@@ -99,6 +103,7 @@ app.put("/people/:email", async (req: Request, res: Response) => {
       res.status(200).json(person);
     }
   } catch (error) {
+    console.error("Error updating person:", error);
     res.status(500).json({ error: "Failed to update person" });
   }
 });
@@ -111,6 +116,7 @@ app.delete("/people/:email", async (req: Request, res: Response) => {
     const person = await prisma.person.delete({ where: { email } });
     res.status(204).send();
   } catch (error) {
+    console.error("Error deleting person:", error);
     res.status(404).json({ error: "Person not found" });
   }
 });
