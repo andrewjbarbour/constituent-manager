@@ -14,7 +14,7 @@ Before you begin, ensure you have the following installed on your machine:
 Clone the project:
 
 ```sh
-https://github.com/andrewjbarbour/constituent-manager.git
+git clone https://github.com/andrewjbarbour/constituent-manager.git
 ```
 
 ### Backend Setup
