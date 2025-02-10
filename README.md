@@ -17,13 +17,14 @@ Clone the project:
 https://github.com/andrewjbarbour/constituent-manager.git
 ```
 
-### Backend
+### Backend Setup
 
-Navigate to the backend directory, install the dependencies, and start the server:
+Navigate to the backend directory, install the dependencies, set up the sqlite database with Prisma, and start the server:
 
 ```sh
 cd backend
 npm install
+npx prisma migrate dev --name init
 npm run dev
 ```
 
@@ -31,14 +32,13 @@ The backend server will start on http://localhost:5001
 
 You can set a custom port for the back-end server by updating the .env files in both the backend and frontend directories (`PORT` in backend/.env and `VITE_API_PORT` in frontend/.env).
 
-### Frontend
+### Frontend Setup
 
-Open a new terminal and navigate to the frontend directory. Install the dependencies, set up the sqlite database with Prisma, and start the server:
+Open a new terminal and navigate to the frontend directory. Install the dependencies and start the server:
 
 ```sh
-cd backend
+cd frontend
 npm install
-npx prisma migrate dev --name init
 npm run dev
 ```
 
