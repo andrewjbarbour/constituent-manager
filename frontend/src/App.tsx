@@ -71,24 +71,31 @@ function App() {
   const addOrUpdatePerson = async () => {
     if (!name.trim() || !email.trim() || !address.trim()) return;
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
+      const method = editingPerson ? "PUT" : "POST";
+      const url = editingPerson ? `${API_URL}/${editingPerson.email}` : API_URL;
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           email,
           address,
           signupTime: dayjs().format("YYYY-MM-DD"),
+          newEmail: email,
         }),
       });
-      if (!response.ok) throw new Error("Failed to add or update person");
+      if (!response.ok)
+        throw new Error(`Failed to ${editingPerson ? "update" : "add"} person`);
       fetchPeople(startDate ?? undefined, endDate ?? undefined);
       setName("");
       setEmail("");
       setAddress("");
       setEditingPerson(null);
     } catch (error) {
-      console.error("Error adding or updating person:", error);
+      console.error(
+        `Error ${editingPerson ? "updating" : "adding"} person:`,
+        error
+      );
     }
   };
 

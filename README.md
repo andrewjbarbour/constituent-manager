@@ -68,6 +68,8 @@ The backend server provides the following API endpoints:
 
 `GET /people`: Retrieve a list of people with optional date range filtering.
 
-`POST /people`: Add or update a person.
+`POST /people`: Add a person.
+
+`PUT /people/:email`: Update a person by email.
 
 `DELETE /people/:email`: Delete a person by email.

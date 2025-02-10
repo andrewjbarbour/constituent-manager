@@ -44,7 +44,6 @@ export const handleFileUpload = (
       header: true,
       complete: async (results) => {
         const newPeople: Person[] = results.data.map((row: any) => ({
-          id: row.ID,
           name: row.Name,
           email: row.Email,
           address: row.Address,
@@ -58,21 +57,32 @@ export const handleFileUpload = (
             // Validate the data
             personSchema.parse(person);
 
-            const response = await fetch(API_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(person),
-            });
-            if (!response.ok) throw new Error("Failed to add or update person");
-
-            const updatedPerson = await response.json();
             const existingPersonIndex = updatedPeople.findIndex(
               (p) => p.email === person.email
             );
+
             if (existingPersonIndex !== -1) {
+              // Update the existing person
+              const response = await fetch(`${API_URL}/${person.email}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(person),
+              });
+              if (!response.ok) throw new Error("Failed to update person");
+
+              const updatedPerson = await response.json();
               updatedPeople[existingPersonIndex] = updatedPerson;
             } else {
-              updatedPeople.push(updatedPerson);
+              // Add the new person
+              const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(person),
+              });
+              if (!response.ok) throw new Error("Failed to add person");
+
+              const newPerson = await response.json();
+              updatedPeople.push(newPerson);
             }
           } catch (error) {
             console.error("Error adding or updating person:", error);

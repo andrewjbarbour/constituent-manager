@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 beforeAll(async () => {
   await prisma.$connect();
-  await prisma.person.deleteMany(); // Clear existing data
+  await prisma.person.deleteMany();
 });
 
 afterAll(async () => {
