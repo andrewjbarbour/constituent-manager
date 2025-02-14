@@ -42,15 +42,30 @@ app.post("/people", async (req: Request, res: Response) => {
   }
 
   try {
-    const person = await prisma.person.create({
-      data: {
-        name,
-        email,
-        address,
-        signupTime: signupTime || dayjs().format("YYYY-MM-DD"),
-      },
-    });
-    res.status(201).json(person);
+    const existingPerson = await prisma.person.findUnique({ where: { email } });
+    if (existingPerson) {
+      // Update the existing person but keep the original signup time
+      const person = await prisma.person.update({
+        where: { email },
+        data: {
+          name,
+          address,
+          signupTime: existingPerson.signupTime,
+        },
+      });
+      res.status(200).json(person);
+    } else {
+      // Create a new person
+      const person = await prisma.person.create({
+        data: {
+          name,
+          email,
+          address,
+          signupTime: signupTime || dayjs().format("YYYY-MM-DD"),
+        },
+      });
+      res.status(201).json(person);
+    }
   } catch (error) {
     console.error("Error adding person:", error);
     res.status(500).json({ error: "Failed to add person" });
